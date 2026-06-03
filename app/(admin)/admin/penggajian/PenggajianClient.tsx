@@ -6,7 +6,7 @@ import { Packing, Produk, User } from "@prisma/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
-type PackingWithRelations = Packing & { produk: Produk; karyawan: User };
+type PackingWithRelations = Packing & { produk: Produk };
 type KaryawanWithPacking = User & { packingSebagaiKaryawan: PackingWithRelations[] };
 
 interface Props {
