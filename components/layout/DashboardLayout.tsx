@@ -6,7 +6,7 @@ import { SidebarProvider } from "./SidebarContext";
 
 interface DashboardLayoutProps {
   children: ReactNode;
-  role: "OWNER" | "ADMIN_GUDANG" | "PACKING";
+  role: "OWNER" | "ADMIN_GUDANG" | "KARYAWAN";
 }
 
 export default function DashboardLayout({ children, role }: DashboardLayoutProps) {
