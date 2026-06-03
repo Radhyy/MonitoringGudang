@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = Number(params.id);
+    const { id: idString } = await params;
+    const id = Number(idString);
     const body = await req.json();
 
     const { kodeBarang, namaBarang, satuan, stokMinimum, hargaSatuan } = body;
@@ -41,9 +42,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = Number(params.id);
+    const { id: idString } = await params;
+    const id = Number(idString);
 
     // Cek apakah barang dipakai di tabel lain
     const checkMasuk = await prisma.barangMasuk.findFirst({ where: { barangId: id } });
