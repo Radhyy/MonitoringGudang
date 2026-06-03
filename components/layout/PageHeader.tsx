@@ -10,16 +10,25 @@ interface PageHeaderProps {
 }
 
 export default function PageHeader({ title, description }: PageHeaderProps) {
-  const { toggleSidebar } = useSidebar();
+  const { toggleSidebar, openMobile } = useSidebar();
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
       <div className="flex items-center gap-4">
-        {/* Toggle Button */}
+        {/* Desktop Toggle Button */}
         <button
           onClick={toggleSidebar}
-          className="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm hover:shadow-md shrink-0"
+          className="hidden md:block p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm hover:shadow-md shrink-0"
           title="Toggle Sidebar"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        {/* Mobile Drawer Button */}
+        <button
+          onClick={openMobile}
+          className="block md:hidden p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-all text-slate-600 shadow-sm hover:shadow-md shrink-0"
+          title="Open Menu"
         >
           <Menu className="w-5 h-5" />
         </button>

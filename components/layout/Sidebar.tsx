@@ -12,18 +12,22 @@ import {
   FileText, 
   TrendingUp,
   Box,
-  ClipboardList,
-  Bell,
-  Layers
+  Layers,
+  X
 } from "lucide-react";
 
 interface SidebarProps {
   role: "OWNER" | "ADMIN_GUDANG" | "KARYAWAN";
+  mobile?: boolean;
+  onClose?: () => void;
 }
 
-export default function Sidebar({ role }: SidebarProps) {
+export default function Sidebar({ role, mobile = false, onClose }: SidebarProps) {
   const { isCollapsed } = useSidebar();
   const pathname = usePathname();
+
+  // On mobile drawer, always show full sidebar (not collapsed)
+  const collapsed = mobile ? false : isCollapsed;
 
   const getMenuItems = () => {
     switch (role) {
@@ -67,12 +71,12 @@ export default function Sidebar({ role }: SidebarProps) {
   return (
     <aside 
       className={`${
-        isCollapsed ? "w-20" : "w-64"
+        collapsed ? "w-20" : "w-64"
       } bg-slate-900 text-slate-300 min-h-screen transition-all duration-300 ease-in-out flex flex-col relative z-20 border-r border-slate-800 shadow-2xl shrink-0`}
     >
       {/* Sidebar Header */}
       <div className="h-[88px] flex items-center justify-between px-6 border-b border-slate-800">
-        {!isCollapsed && (
+        {!collapsed && (
           <div className="flex items-center gap-3 overflow-hidden w-full">
             <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">
               <Box className="w-5 h-5 text-white" />
@@ -80,12 +84,21 @@ export default function Sidebar({ role }: SidebarProps) {
             <span className="font-bold text-white text-lg tracking-tight whitespace-nowrap">GudangKu</span>
           </div>
         )}
-        {isCollapsed && (
+        {collapsed && (
           <div className="w-full flex justify-center">
             <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
               <Box className="w-5 h-5 text-white" />
             </div>
           </div>
+        )}
+        {/* Close button for mobile drawer */}
+        {mobile && onClose && (
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0"
+          >
+            <X className="w-5 h-5" />
+          </button>
         )}
       </div>
 
@@ -97,15 +110,16 @@ export default function Sidebar({ role }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center ${isCollapsed ? "justify-center" : "justify-start"} px-3 py-3 rounded-xl transition-all duration-200 group ${
+              onClick={mobile ? onClose : undefined}
+              className={`flex items-center ${collapsed ? "justify-center" : "justify-start"} px-3 py-3 rounded-xl transition-all duration-200 group ${
                 isActive 
                   ? "bg-blue-600/15 text-blue-400" 
                   : "hover:bg-slate-800 hover:text-white"
               }`}
-              title={isCollapsed ? item.name : ""}
+              title={collapsed ? item.name : ""}
             >
               <item.icon className={`w-[22px] h-[22px] shrink-0 ${isActive ? "text-blue-500" : "text-slate-400 group-hover:text-slate-300"}`} />
-              {!isCollapsed && (
+              {!collapsed && (
                 <span className="ml-3 font-medium text-sm whitespace-nowrap">
                   {item.name}
                 </span>
@@ -119,15 +133,13 @@ export default function Sidebar({ role }: SidebarProps) {
       <div className="p-4 border-t border-slate-800 mt-auto">
         <button
           onClick={() => {
-            // Need to import signOut from next-auth/react at the top
             import("next-auth/react").then((mod) => mod.signOut({ callbackUrl: "/login" }));
           }}
-          className={`flex items-center w-full ${isCollapsed ? "justify-center" : "justify-start"} px-3 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors group`}
-          title={isCollapsed ? "Logout" : ""}
+          className={`flex items-center w-full ${collapsed ? "justify-center" : "justify-start"} px-3 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors group`}
+          title={collapsed ? "Logout" : ""}
         >
-          {/* Need to import LogOut icon at the top */}
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-[22px] h-[22px] shrink-0"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg>
-          {!isCollapsed && <span className="ml-3 font-medium text-sm whitespace-nowrap">Logout</span>}
+          {!collapsed && <span className="ml-3 font-medium text-sm whitespace-nowrap">Logout</span>}
         </button>
       </div>
     </aside>
