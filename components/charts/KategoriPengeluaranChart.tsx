@@ -44,7 +44,7 @@ export default function KategoriPengeluaranChart({ data }: { data: KategoriData[
           </Pie>
           <Tooltip 
             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-            formatter={(value: number) => [`Rp ${value.toLocaleString('id-ID')}`, 'Total']}
+            formatter={(value) => [`Rp ${Number(value).toLocaleString('id-ID')}`, 'Total']}
           />
           <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '12px', color: '#64748b' }} />
         </PieChart>

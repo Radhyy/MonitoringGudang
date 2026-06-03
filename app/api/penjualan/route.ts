@@ -22,7 +22,7 @@ export async function POST(req: Request) {
         throw new Error(`Stok "${produk.namaProduk}" tidak cukup! Tersisa ${produk.stok}, ingin jual ${jumlahTerjual}.`);
       }
 
-      const totalHarga = produk.hargaJual * Number(jumlahTerjual);
+      const totalHarga = Number(produk.hargaJual) * Number(jumlahTerjual);
 
       // Buat record penjualan
       const penjualan = await tx.penjualan.create({

@@ -64,7 +64,7 @@ export default function TrenKeuanganChart({ data }: { data: TrenData[] }) {
           />
           <Tooltip 
             contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-            formatter={(value: number) => [`Rp ${value.toLocaleString('id-ID')}`, '']}
+            formatter={(value) => [`Rp ${Number(value).toLocaleString('id-ID')}`, '']}
           />
           <Area 
             type="monotone" 

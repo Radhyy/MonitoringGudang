@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       const produk = await tx.produk.findUnique({ where: { id: Number(produkId) } });
       if (!produk) throw new Error("Produk tidak ditemukan");
 
-      const tarifPerPack = produk.tarifPacking || 0;
+      const tarifPerPack = Number(produk.tarifPacking) || 0;
       const totalGaji = Number(jumlahProduksi) * tarifPerPack;
 
       // Buat record sesi Packing utama
