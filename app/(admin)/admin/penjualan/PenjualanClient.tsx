@@ -72,7 +72,7 @@ export default function PenjualanClient({ penjualanList, produkList }: Props) {
 
   // Hitung perkiraan pendapatan
   const perkiraanPendapatan = selectedProduk && formData.jumlahTerjual
-    ? selectedProduk.hargaJual * Number(formData.jumlahTerjual)
+    ? Number(selectedProduk.hargaJual) * Number(formData.jumlahTerjual)
     : 0;
 
   return (
