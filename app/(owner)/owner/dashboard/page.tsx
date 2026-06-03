@@ -4,6 +4,8 @@ import TrenKeuanganChart from "@/components/charts/TrenKeuanganChart";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 
+export const dynamic = "force-dynamic";
+
 export default async function OwnerDashboard() {
   // --- 1. Fetch Summary Data ---
   const [
