@@ -9,18 +9,34 @@ export default async function OwnerDashboard() {
   const [
     barangMasukAgg,
     pengeluaranAgg,
+    penjualanAgg,
+    packingAgg,
     barangMasukCount,
     barangKeluarCount,
     stokAlertCount,
+    stokBarangAgg,
+    barangTerpakaiAgg,
+    produkTerjualAgg,
+    barangMasukQtyAgg,
+    barangKeluarQtyAgg,
     recentBarangMasuk,
     allBarangMasuk,
-    allPengeluaran
+    allPengeluaran,
+    allPenjualan,
+    allPacking
   ] = await Promise.all([
     prisma.barangMasuk.aggregate({ _sum: { totalHarga: true } }),
     prisma.pengeluaran.aggregate({ _sum: { jumlah: true } }),
+    prisma.penjualan.aggregate({ _sum: { totalHarga: true } }),
+    prisma.packing.aggregate({ _sum: { totalGaji: true } }),
     prisma.barangMasuk.count(),
     prisma.barangKeluar.count(),
     prisma.barang.count({ where: { stok: { lte: prisma.barang.fields.stokMinimum } } }),
+    prisma.barang.aggregate({ _sum: { stok: true } }),
+    prisma.packingDetail.aggregate({ _sum: { jumlahTerpakai: true } }),
+    prisma.penjualan.aggregate({ _sum: { jumlah: true } }),
+    prisma.barangMasuk.aggregate({ _sum: { jumlah: true } }),
+    prisma.barangKeluar.aggregate({ _sum: { jumlah: true } }),
     prisma.barangMasuk.findMany({ 
       take: 5, 
       orderBy: { tanggal: "desc" }, 
@@ -28,11 +44,25 @@ export default async function OwnerDashboard() {
     }),
     prisma.barangMasuk.findMany({ select: { tanggal: true, totalHarga: true } }),
     prisma.pengeluaran.findMany({ select: { tanggal: true, jumlah: true } }),
+    prisma.penjualan.findMany({ select: { tanggal: true, totalHarga: true } }),
+    prisma.packing.findMany({ select: { tanggalPacking: true, totalGaji: true } })
   ]);
 
+  // Keuangan
   const totalPembelian = Number(barangMasukAgg._sum.totalHarga || 0);
-  const totalPengeluaran = Number(pengeluaranAgg._sum.jumlah || 0);
-  const totalBiaya = totalPembelian + totalPengeluaran;
+  const totalPengeluaranLain = Number(pengeluaranAgg._sum.jumlah || 0);
+  const totalGaji = Number(packingAgg._sum.totalGaji || 0);
+  const totalPenjualan = Number(penjualanAgg._sum.totalHarga || 0);
+  
+  const totalPengeluaran = totalPembelian + totalPengeluaranLain + totalGaji;
+  const labaRugi = totalPenjualan - totalPengeluaran;
+
+  // Statistik Kuantitas
+  const sisaBarang = Number(stokBarangAgg._sum.stok || 0);
+  const barangTerpakai = Number(barangTerpakaiAgg._sum.jumlahTerpakai || 0);
+  const produkTerjual = Number(produkTerjualAgg._sum.jumlah || 0);
+  const qtyBarangMasuk = Number(barangMasukQtyAgg._sum.jumlah || 0);
+  const qtyBarangKeluar = Number(barangKeluarQtyAgg._sum.jumlah || 0);
 
   // --- 2. Process Chart Data ---
   const trendMap: Record<string, { name: string, pemasukan: number, pengeluaran: number }> = {};
@@ -49,6 +79,18 @@ export default async function OwnerDashboard() {
     trendMap[month].pengeluaran += Number(trx.jumlah);
   });
 
+  allPacking.forEach(trx => {
+    const month = format(new Date(trx.tanggalPacking), "MMM yy", { locale: id });
+    if (!trendMap[month]) trendMap[month] = { name: month, pemasukan: 0, pengeluaran: 0 };
+    trendMap[month].pengeluaran += Number(trx.totalGaji);
+  });
+
+  allPenjualan.forEach(trx => {
+    const month = format(new Date(trx.tanggal), "MMM yy", { locale: id });
+    if (!trendMap[month]) trendMap[month] = { name: month, pemasukan: 0, pengeluaran: 0 };
+    trendMap[month].pemasukan += Number(trx.totalHarga);
+  });
+
   const trendData = Object.values(trendMap);
 
   return (
@@ -58,27 +100,51 @@ export default async function OwnerDashboard() {
         description="Ringkasan operasional harian gudang, aktivitas stok, dan keuangan." 
       />
       
-      {/* Summary Cards */}
+      {/* Keuangan Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
-          <h3 className="text-slate-500 font-medium text-sm mb-2">Total Biaya & Pembelian</h3>
-          <p className="text-2xl font-bold text-red-600">
-            - Rp {(totalBiaya / 1000000).toFixed(1)}M
+          <h3 className="text-slate-500 font-medium text-sm mb-2">Total Laba/Rugi Bersih</h3>
+          <p className={`text-2xl font-bold ${labaRugi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            {labaRugi < 0 ? '-' : ''} Rp {Math.abs(labaRugi / 1000).toLocaleString('id-ID')}K
           </p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
-          <h3 className="text-slate-500 font-medium text-sm mb-2">Aktivitas Barang Masuk</h3>
-          <p className="text-2xl font-bold text-slate-800">{barangMasukCount.toLocaleString('id-ID')} Kali</p>
-        </div>
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
-          <h3 className="text-slate-500 font-medium text-sm mb-2">Aktivitas Barang Keluar</h3>
-          <p className="text-2xl font-bold text-slate-800">{barangKeluarCount.toLocaleString('id-ID')} Kali</p>
         </div>
         <div className={`bg-white p-6 rounded-2xl shadow-sm border transition-all hover:shadow-md ${stokAlertCount > 0 ? 'border-red-100 bg-red-50/30' : 'border-slate-100'}`}>
           <h3 className={`${stokAlertCount > 0 ? 'text-red-500' : 'text-slate-500'} font-medium text-sm mb-2`}>Alert Stok Kritis</h3>
           <p className={`text-2xl font-bold ${stokAlertCount > 0 ? 'text-red-600' : 'text-slate-800'}`}>
             {stokAlertCount} Item
           </p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
+          <h3 className="text-slate-500 font-medium text-sm mb-2">Total Pemasukan (Kotor)</h3>
+          <p className="text-2xl font-bold text-green-600">Rp {(totalPenjualan / 1000).toLocaleString('id-ID')}K</p>
+        </div>
+        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 transition-all hover:shadow-md">
+          <h3 className="text-slate-500 font-medium text-sm mb-2">Total Pengeluaran</h3>
+          <p className="text-2xl font-bold text-red-600">Rp {(totalPengeluaran / 1000).toLocaleString('id-ID')}K</p>
+        </div>
+      </div>
+
+      {/* Statistik Kuantitas Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-100">
+          <h3 className="text-blue-600/80 font-medium text-xs mb-1">Barang Masuk</h3>
+          <p className="text-lg font-bold text-blue-700">{qtyBarangMasuk.toLocaleString('id-ID')} <span className="text-xs font-normal">Unit</span></p>
+        </div>
+        <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+          <h3 className="text-slate-500 font-medium text-xs mb-1">Barang Keluar</h3>
+          <p className="text-lg font-bold text-slate-700">{qtyBarangKeluar.toLocaleString('id-ID')} <span className="text-xs font-normal">Unit</span></p>
+        </div>
+        <div className="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+          <h3 className="text-orange-600/80 font-medium text-xs mb-1">Barang Terpakai (Pack)</h3>
+          <p className="text-lg font-bold text-orange-700">{barangTerpakai.toLocaleString('id-ID')} <span className="text-xs font-normal">Unit</span></p>
+        </div>
+        <div className="bg-green-50/50 p-4 rounded-xl border border-green-100">
+          <h3 className="text-green-600/80 font-medium text-xs mb-1">Produk Terjual</h3>
+          <p className="text-lg font-bold text-green-700">{produkTerjual.toLocaleString('id-ID')} <span className="text-xs font-normal">Pack</span></p>
+        </div>
+        <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 lg:col-span-2">
+          <h3 className="text-indigo-600/80 font-medium text-xs mb-1">Sisa Barang (Total Stok Gudang)</h3>
+          <p className="text-xl font-bold text-indigo-700">{sisaBarang.toLocaleString('id-ID')} <span className="text-sm font-normal">Unit</span></p>
         </div>
       </div>
 
