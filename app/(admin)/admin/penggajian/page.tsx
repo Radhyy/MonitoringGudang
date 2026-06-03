@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import PenggajianClient from "./PenggajianClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function PenggajianAdminPage() {
   // Ambil semua karyawan beserta rekap total gaji mereka
   const karyawanList = await prisma.user.findMany({

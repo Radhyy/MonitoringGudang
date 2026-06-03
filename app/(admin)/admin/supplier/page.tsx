@@ -2,6 +2,8 @@ import PageHeader from "@/components/layout/PageHeader";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
+export const dynamic = "force-dynamic";
+
 export default async function KelolaSupplierPage() {
   const supplierList = await prisma.supplier.findMany({
     orderBy: {

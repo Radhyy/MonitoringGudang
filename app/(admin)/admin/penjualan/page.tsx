@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import PenjualanClient from "./PenjualanClient";
 
+export const dynamic = "force-dynamic";
+
 export default async function PenjualanAdminPage() {
   const penjualanList = await prisma.penjualan.findMany({
     orderBy: { tanggal: "desc" },
